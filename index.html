@@ -1,80 +1,256 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Piano Pad</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Piano Pad Modern</title>
+
 <style>
-  body {
-    background: #111;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
+  :root{
+    --bg: #050506;
+    --panel: rgba(255,255,255,0.04);
+    --panel-border: rgba(255,255,255,0.08);
+    --text: #e8e8ea;
+    --muted: #a7a7ad;
   }
-  #keyboard {
-    display: grid;
-    grid-template-columns: repeat(4, 80px);
-    grid-gap: 12px;
+
+  * { box-sizing: border-box; }
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(900px 600px at 10% -10%, rgba(120,120,255,0.10), transparent 60%),
+      radial-gradient(900px 600px at 110% 10%, rgba(0,255,200,0.10), transparent 55%),
+      var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
   }
-  .key {
-    width: 80px;
-    height: 80px;
-    border-radius: 10px;
-    font-size: 20px;
-    font-weight: bold;
+
+  .app{
+    width:min(920px, 100%);
+    background: var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:20px;
+    padding:18px;
+    backdrop-filter: blur(8px);
+    box-shadow:
+      0 10px 40px rgba(0,0,0,0.55),
+      inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+
+  .header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:6px 6px 14px 6px;
+  }
+  .title{
+    font-weight:700;
+    letter-spacing:0.4px;
+    font-size:1.1rem;
+  }
+  .subtitle{
+    color:var(--muted);
+    font-size:0.9rem;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap:12px;
+  }
+
+  .key{
+    position:relative;
+    height: clamp(88px, 16vw, 140px);
+    border-radius:16px;
+    border:1px solid rgba(255,255,255,0.14);
+    color:#0b0b0c;
+    font-weight:800;
+    font-size: clamp(1.05rem, 3.5vw, 1.4rem);
+    letter-spacing:0.5px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    user-select:none;
+    box-shadow:
+      0 8px 18px rgba(0,0,0,0.45),
+      inset 0 1px 0 rgba(255,255,255,0.7);
+    transition: transform .08s ease, filter .12s ease, box-shadow .12s ease;
+    overflow:hidden;
+  }
+
+  .key::after{
+    content:"";
+    position:absolute;
+    inset:-40% -10% auto -10%;
+    height:90%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.65), transparent 70%);
+    transform: rotate(8deg);
+    opacity:0.35;
+    pointer-events:none;
+  }
+
+  .key:active{
+    transform: translateY(2px) scale(0.98);
+    filter: brightness(1.05) saturate(1.1);
+    box-shadow:
+      0 4px 10px rgba(0,0,0,0.55),
+      inset 0 1px 0 rgba(255,255,255,0.65);
+  }
+
+  .label{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.25);
+  }
+  .note{
+    font-size:1.05em;
+  }
+
+  .counter{
+    position:absolute;
+    top:8px;
+    right:8px;
+    min-width:28px;
+    height:28px;
+    padding:0 8px;
+    background: rgba(0,0,0,0.55);
     color: #fff;
-    background: #333;
-    border: 2px solid #666;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: all 0.1s ease;
+    border:1px solid rgba(255,255,255,0.18);
+    border-radius:999px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:0.95rem;
+    font-weight:800;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.2);
   }
-  .key:active {
-    background: #0ff;
-    color: #000;
-    transform: scale(0.95);
+
+  .counter.zero{
+    background: rgba(0,0,0,0.85);
+    color:#ffb3b3;
+    border-color: rgba(255,120,120,0.6);
+  }
+
+  .wide{
+    grid-column: span 2;
+  }
+  .reset{
+    color:#fff;
+    background: linear-gradient(135deg, #2b2b2f, #141417);
+    border:1px solid rgba(255,255,255,0.18);
+  }
+  .reset:active{
+    filter: brightness(1.1);
+  }
+
+  @media (max-width:520px){
+    .grid{ grid-template-columns: repeat(2, 1fr); }
+    .wide{ grid-column: span 2; }
   }
 </style>
 </head>
 <body>
 
-<div id="keyboard"></div>
+<div class="app">
+  <div class="header">
+    <div>
+      <div class="title">Piano Pad</div>
+      <div class="subtitle">Tap a key — first 7 count down from 3</div>
+    </div>
+  </div>
+
+  <div id="grid" class="grid"></div>
+</div>
 
 <script>
-  // Define your notes and corresponding sound files
-  const notes = [
-    { name: 'C',  file: 'sounds/C.mp3' },
-    { name: 'C#', file: 'sounds/Cs.mp3' },
-    { name: 'D',  file: 'sounds/D.mp3' },
-    { name: 'D#', file: 'sounds/Ds.mp3' },
-    { name: 'E',  file: 'sounds/E.mp3' },
-    { name: 'F',  file: 'sounds/F.mp3' },
-    { name: 'F#', file: 'sounds/Fs.mp3' },
-    { name: 'G',  file: 'sounds/G.mp3' },
-    { name: 'G#', file: 'sounds/Gs.mp3' },
-    { name: 'A',  file: 'sounds/A.mp3' },
-    { name: 'A#', file: 'sounds/As.mp3' },
-    { name: 'B',  file: 'sounds/B.mp3' }
+  // --- CONFIG ---
+  // Put your mp3s in /sounds with these names (or change file paths here).
+  const keys = [
+    // First 7 keys: have counters
+    { id:"k1", label:"1", sound:"sounds/C.mp3",  color:"#ff6b6b", hasCounter:true },
+    { id:"k2", label:"2", sound:"sounds/D.mp3",  color:"#ffd93d", hasCounter:true },
+    { id:"k3", label:"3", sound:"sounds/E.mp3",  color:"#6bff95", hasCounter:true },
+    { id:"k4", label:"4", sound:"sounds/F.mp3",  color:"#4dd6ff", hasCounter:true },
+    { id:"k5", label:"5", sound:"sounds/G.mp3",  color:"#7c5cff", hasCounter:true },
+    { id:"k6", label:"6", sound:"sounds/A.mp3",  color:"#ff8fe3", hasCounter:true },
+    { id:"k7", label:"7", sound:"sounds/B.mp3",  color:"#ff9f43", hasCounter:true },
+
+    // 8th key: special wharp-wharp sound, no counter
+    { id:"wharp", label:"Wharp-Wharp", sound:"sounds/wharp.mp3", color:"#b8f7ff", hasCounter:false, wide:true },
+
+    // 9th key: reset
+    { id:"reset", label:"Reset", sound:null, color:null, hasCounter:false, reset:true, wide:true }
   ];
 
-  const keyboard = document.getElementById('keyboard');
+  const START_COUNT = 3;
+  const counts = {}; // store per-key counts
 
-  // Create buttons dynamically
-  notes.forEach(note => {
-    const btn = document.createElement('button');
-    btn.classList.add('key');
-    btn.textContent = note.name;
-    btn.addEventListener('click', () => {
-      const audio = new Audio(note.file);
-      audio.currentTime = 0;
-      audio.play();
+  const grid = document.getElementById("grid");
+
+  function playSound(path){
+    if(!path) return;
+    const audio = new Audio(path);
+    audio.currentTime = 0;
+    audio.play().catch(()=>{ /* ignore autoplay blocks */ });
+  }
+
+  function render(){
+    grid.innerHTML = "";
+    keys.forEach(k => {
+      const btn = document.createElement("button");
+      btn.className = "key" + (k.wide ? " wide" : "") + (k.reset ? " reset" : "");
+      if(k.color) btn.style.background = `linear-gradient(145deg, ${k.color}, #ffffff)`;
+
+      // label
+      const labelWrap = document.createElement("div");
+      labelWrap.className = "label";
+      const note = document.createElement("div");
+      note.className = "note";
+      note.textContent = k.label;
+      labelWrap.appendChild(note);
+      btn.appendChild(labelWrap);
+
+      // counter
+      if(k.hasCounter){
+        if(!(k.id in counts)) counts[k.id] = START_COUNT;
+        const badge = document.createElement("div");
+        badge.className = "counter" + (counts[k.id] === 0 ? " zero" : "");
+        badge.textContent = counts[k.id];
+        btn.appendChild(badge);
+      }
+
+      // click behavior
+      btn.addEventListener("click", () => {
+        if(k.reset){
+          // Reset all counters
+          keys.filter(x => x.hasCounter).forEach(x => counts[x.id] = START_COUNT);
+          render();
+          return;
+        }
+
+        playSound(k.sound);
+
+        if(k.hasCounter){
+          counts[k.id] = Math.max(0, counts[k.id] - 1);
+          render();
+        }
+      });
+
+      grid.appendChild(btn);
     });
-    keyboard.appendChild(btn);
-  });
-</script>
+  }
 
+  render();
+</script>
 </body>
 </html>
