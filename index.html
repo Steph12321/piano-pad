@@ -47,7 +47,7 @@
     align-items:center;
     justify-content:space-between;
     gap:10px;
-    padding:6px 6px 14px 6px;
+    padding:6px 6px 10px 6px;
   }
   .title{
     font-weight:700;
@@ -57,6 +57,65 @@
   .subtitle{
     color:var(--muted);
     font-size:0.9rem;
+  }
+
+  .controls{
+    border-top:1px solid rgba(255,255,255,0.06);
+    border-bottom:1px solid rgba(255,255,255,0.06);
+    padding:8px 6px 10px;
+    margin-bottom:10px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px 18px;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .control{
+    flex:1 1 160px;
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    font-size:0.85rem;
+    color:var(--muted);
+  }
+  .control label{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .control span.value{
+    color:#ffffff;
+    font-weight:600;
+    font-size:0.85rem;
+  }
+  .control input[type="range"]{
+    width:100%;
+    -webkit-appearance:none;
+    appearance:none;
+    height:4px;
+    border-radius:999px;
+    background:rgba(255,255,255,0.18);
+    outline:none;
+  }
+  .control input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    appearance:none;
+    width:18px;
+    height:18px;
+    border-radius:50%;
+    background:#ffffff;
+    border:2px solid #00ffd0;
+    box-shadow:0 0 0 4px rgba(0,255,208,0.2);
+    cursor:pointer;
+  }
+  .control input[type="range"]::-moz-range-thumb{
+    width:18px;
+    height:18px;
+    border-radius:50%;
+    background:#ffffff;
+    border:2px solid #00ffd0;
+    box-shadow:0 0 0 4px rgba(0,255,208,0.2);
+    cursor:pointer;
   }
 
   .grid{
@@ -165,7 +224,24 @@
   <div class="header">
     <div>
       <div class="title">Piano Pad</div>
-      <div class="subtitle">Family keys count down from 3 · Start + Wharp + Reset</div>
+      <div class="subtitle">Leo's Family Fun</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="control">
+      <label>
+        <span>Family keys volume</span>
+        <span id="mainVolLabel" class="value">100%</span>
+      </label>
+      <input type="range" id="mainVolume" min="0" max="100" value="100">
+    </div>
+    <div class="control">
+      <label>
+        <span>Start volume</span>
+        <span id="startVolLabel" class="value">40%</span>
+      </label>
+      <input type="range" id="startVolume" min="0" max="100" value="40">
     </div>
   </div>
 
@@ -177,16 +253,16 @@
   // Make sure these files exist in your /sounds folder.
   const keys = [
     // First 7 keys: family, have counters and "longer" note
-    { id:"k1", label:"Poppa",    sound:"sounds/C.mp3",  color:"#ff6b6b", hasCounter:true, longNote:true },
-    { id:"k2", label:"Nana",     sound:"sounds/D.mp3",  color:"#ffd93d", hasCounter:true, longNote:true },
-    { id:"k3", label:"Dad",      sound:"sounds/E.mp3",  color:"#6bff95", hasCounter:true, longNote:true },
-    { id:"k4", label:"A.Kim",    sound:"sounds/F.mp3",  color:"#4dd6ff", hasCounter:true, longNote:true },
-    { id:"k5", label:"Kezia",    sound:"sounds/G.mp3",  color:"#7c5cff", hasCounter:true, longNote:true },
-    { id:"k6", label:"Scarlett", sound:"sounds/A.mp3",  color:"#ff8fe3", hasCounter:true, longNote:true },
-    { id:"k7", label:"Sienna",   sound:"sounds/B.mp3",  color:"#ff9f43", hasCounter:true, longNote:true },
+    { id:"k1", label:"Poppa",    sound:"sounds/C.mp3",    color:"#ff6b6b", hasCounter:true, longNote:true },
+    { id:"k2", label:"Nana",     sound:"sounds/D.mp3",    color:"#ffd93d", hasCounter:true, longNote:true },
+    { id:"k3", label:"Dad",      sound:"sounds/E.mp3",    color:"#6bff95", hasCounter:true, longNote:true },
+    { id:"k4", label:"A.Kim",    sound:"sounds/F.mp3",    color:"#4dd6ff", hasCounter:true, longNote:true },
+    { id:"k5", label:"Kezia",    sound:"sounds/G.mp3",    color:"#7c5cff", hasCounter:true, longNote:true },
+    { id:"k6", label:"Scarlett", sound:"sounds/A.mp3",    color:"#ff8fe3", hasCounter:true, longNote:true },
+    { id:"k7", label:"Sienna",   sound:"sounds/B.mp3",    color:"#ff9f43", hasCounter:true, longNote:true },
 
     // 8th key: Start (has counter, plays Start.mp3)
-    { id:"startKey", label:"Start", sound:"sounds/Start.mp3", color:"#9cf6ff", hasCounter:false, longNote:false, isStart:true },
+    { id:"startKey", label:"Start", sound:"sounds/Start.mp3", color:"#9cf6ff", hasCounter:true, longNote:false, isStart:true },
 
     // Wharp-Wharp: plays wharp + stops Start
     { id:"wharp", label:"Wharp-Wharp", sound:"sounds/wharp.mp3", color:"#b8f7ff", hasCounter:false, wide:true, isWharp:true },
@@ -200,20 +276,44 @@
 
   let startAudio = null; // keeps track of the Start sound so Wharp can stop it
 
+  // Volume state (0.0–1.0), initial values match sliders
+  const mainVolumeSlider = document.getElementById("mainVolume");
+  const mainVolumeLabel  = document.getElementById("mainVolLabel");
+  const startVolumeSlider = document.getElementById("startVolume");
+  const startVolumeLabel  = document.getElementById("startVolLabel");
+
+  let mainVolume = mainVolumeSlider.value / 100;   // family + wharp
+  let startVolume = startVolumeSlider.value / 100; // start only
+
+  mainVolumeSlider.addEventListener("input", () => {
+    mainVolume = mainVolumeSlider.value / 100;
+    mainVolumeLabel.textContent = `${mainVolumeSlider.value}%`;
+  });
+
+  startVolumeSlider.addEventListener("input", () => {
+    startVolume = startVolumeSlider.value / 100;
+    startVolumeLabel.textContent = `${startVolumeSlider.value}%`;
+    if(startAudio){
+      startAudio.volume = startVolume; // update live if playing
+    }
+  });
+
   const grid = document.getElementById("grid");
 
-  function playSound(path){
+  function playSound(path, volume = 1.0){
     if(!path) return;
     const audio = new Audio(path);
+    audio.volume = volume;
     audio.currentTime = 0;
     audio.play().catch(()=>{ /* ignore autoplay errors */ });
   }
 
   // Play for a bit longer by looping and then stopping after a timeout
-  function playLonger(path, durationMs = 2000){
+  function playLonger(path, durationMs = 2000, volume = 1.0){
     if(!path) return;
     const audio = new Audio(path);
     audio.loop = true;
+    audio.volume = volume;
     audio.play()
       .then(() => {
         setTimeout(() => {
@@ -270,6 +370,7 @@
         if(k.isStart){
           stopStartAudio(); // stop any existing Start sound
           startAudio = new Audio(k.sound);
+          startAudio.volume = startVolume;
           startAudio.currentTime = 0;
           startAudio.play().catch(()=>{});
           if(k.hasCounter){
@@ -282,15 +383,15 @@
         // Wharp-Wharp button: play wharp AND stop Start
         if(k.isWharp){
           stopStartAudio();
-          playSound(k.sound);
+          playSound(k.sound, mainVolume);
           return;
         }
 
-        // Regular keys
+        // Regular family keys
         if(k.longNote){
-          playLonger(k.sound); // first 7 keys: longer note
+          playLonger(k.sound, 2000, mainVolume); // first 7 keys: longer note
         } else {
-          playSound(k.sound);
+          playSound(k.sound, mainVolume);
         }
 
         if(k.hasCounter){
