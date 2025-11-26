@@ -228,26 +228,6 @@
     </div>
   </div>
 
-  <div class="controls">
-    <div class="control">
-      <label>
-        <span>Family keys volume</span>
-        <span id="mainVolLabel" class="value">100%</span>
-      </label>
-      <input type="range" id="mainVolume" min="0" max="100" value="100">
-    </div>
-    <div class="control">
-      <label>
-        <span>Start volume</span>
-        <span id="startVolLabel" class="value">40%</span>
-      </label>
-      <input type="range" id="startVolume" min="0" max="100" value="40">
-    </div>
-  </div>
-
-  <div id="grid" class="grid"></div>
-</div>
-
 <script>
   // --- CONFIG ---
   // Make sure these files exist in your /sounds folder.
@@ -368,7 +348,6 @@
 
         // Start button
         if(k.isStart){
-          stopStartAudio(); // stop any existing Start sound
           startAudio = new Audio(k.sound);
           startAudio.volume = startVolume;
           startAudio.currentTime = 0;
@@ -406,5 +385,25 @@
 
   render();
 </script>
+
+<div class="controls">
+    <div class="control">
+      <label>
+        <span>Family keys volume</span>
+        <span id="mainVolLabel" class="value">100%</span>
+      </label>
+      <input type="range" id="mainVolume" min="0" max="100" value="100">
+    </div>
+    <div class="control">
+      <label>
+        <span>Start volume</span>
+        <span id="startVolLabel" class="value">40%</span>
+      </label>
+      <input type="range" id="startVolume" min="0" max="100" value="40">
+    </div>
+  </div>
+  <div id="grid" class="grid"></div>
+</div>
+  
 </body>
 </html>
