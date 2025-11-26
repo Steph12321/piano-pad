@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Piano Pad Modern</title>
+
+<style>
+  :root{
+    --bg: #050506;
+    --panel: rgba(255,255,255,0.04);
+    --panel-border: rgba(255,255,255,0.08);
+    --text: #e8e8ea;
+    --muted: #a7a7ad;
+  }
+
+  * { box-sizing: border-box; }
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(900px 600px at 10% -10%, rgba(120,120,255,0.10), transparent 60%),
+      radial-gradient(900px 600px at 110% 10%, rgba(0,255,200,0.10), transparent 55%),
+      var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+  }
+
+  .app{
+    width:min(920px, 100%);
+    background: var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:20px;
+    padding:18px;
+    backdrop-filter: blur(8px);
+    box-shadow:
+      0 10px 40px rgba(0,0,0,0.55),
+      inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+
+  .header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:6px 6px 14px 6px;
+  }
+  .title{
+    font-weight:700;
+    letter-spacing:0.4px;
+    font-size:1.1rem;
+  }
+  .subtitle{
+    color:var(--muted);
+    font-size:0.9rem;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap:12px;
+  }
+
+  .key{
+    position:relative;
+    height: clamp(88px, 16vw, 140px);
+    border-radius:16px;
+    border:1px solid rgba(255,255,255,0.14);
+    color:#0b0b0c;
+    font-weight:800;
+    font-size: clamp(1.05rem, 3.5vw, 1.4rem);
+    letter-spacing:0.5px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    user-select:none;
+    box-shadow:
+      0 8px 18px rgba(0,0,0,0.45),
+      inset 0 1px 0 rgba(255,255,255,0.7);
+    transition: transform .08s ease, filter .12s ease, box-shadow .12s ease;
+    overflow:hidden;
+  }
+
+  .key::after{
+    content:"";
+    position:absolute;
+    inset:-40% -10% auto -10%;
+    height:90%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.65), transparent 70%);
+    transform: rotate(8deg);
+    opacity:0.35;
+    pointer-events:none;
+  }
+
+  .key:active{
+    transform: translateY(2px) scale(0.98);
+    filter: brightness(1.05) saturate(1.1);
+    box-shadow:
+      0 4px 10px rgba(0,0,0,0.55),
+      inset 0 1px 0 rgba(255,255,255,0.65);
+  }
+
+  .label{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.25);
+  }
+  .note{
+    font-size:1.05em;
+  }
+
+  .counter{
+    position:absolute;
+    top:8px;
+    right:8px;
+    min-width:28px;
+    height:28px;
+    padding:0 8px;
+    background: rgba(0,0,0,0.55);
+    color: #fff;
+    border:1px solid rgba(255,255,255,0.18);
+    border-radius:999px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:0.95rem;
+    font-weight:800;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.2);
+  }
+
+  .counter.zero{
+    background: rgba(0,0,0,0.85);
+    color:#ffb3b3;
+    border-color: rgba(255,120,120,0.6);
+  }
+
+  .wide{
+    grid-column: span 2;
+  }
+  .reset{
+    color:#fff;
+    background: linear-gradient(135deg, #2b2b2f, #141417);
+    border:1px solid rgba(255,255,255,0.18);
+  }
+  .reset:active{
+    filter: brightness(1.1);
+  }
+
+  @media (max-width:520px){
+    .grid{ grid-template-columns: repeat(2, 1fr); }
+    .wide{ grid-column: span 2; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="header">
+    <div>
+      <div class="title">Piano Pad</div>
+      <div class="subtitle">Family keys count down from 3 · Start + Wharp + Reset</div>
+    </div>
+  </div>
+
+  <div id="grid" class="grid"></div>
+</div>
+
+<script>
+  // --- CONFIG ---
+  // Make sure these files exist in your /sounds folder.
+  const keys = [
+    // First 7 keys: family, have counters and "longer" note
+    { id:"k1", label:"Poppa",    sound:"sounds/C.mp3",  color:"#ff6b6b", hasCounter:true, longNote:true },
+    { id:"k2", label:"Nana",     sound:"sounds/D.mp3",  color:"#ffd93d", hasCounter:true, longNote:true },
+    { id:"k3", label:"Dad",      sound:"sounds/E.mp3",  color:"#6bff95", hasCounter:true, longNote:true },
+    { id:"k4", label:"A.Kim",    sound:"sounds/F.mp3",  color:"#4dd6ff", hasCounter:true, longNote:true },
+    { id:"k5", label:"Kezia",    sound:"sounds/G.mp3",  color:"#7c5cff", hasCounter:true, longNote:true },
+    { id:"k6", label:"Scarlett", sound:"sounds/A.mp3",  color:"#ff8fe3", hasCounter:true, longNote:true },
+    { id:"k7", label:"Sienna",   sound:"sounds/B.mp3",  color:"#ff9f43", hasCounter:true, longNote:true },
+
+    // 8th key: Start (has counter, plays Start.mp3)
+    { id:"startKey", label:"Start", sound:"sounds/Start.mp3", color:"#9cf6ff", hasCounter:true, longNote:false, isStart:true },
+
+    // Wharp-Wharp: plays wharp + stops Start
+    { id:"wharp", label:"Wharp-Wharp", sound:"sounds/wharp.mp3", color:"#b8f7ff", hasCounter:false, wide:true, isWharp:true },
+
+    // Reset: reset all counters
+    { id:"reset", label:"Reset", sound:null, color:null, hasCounter:false, reset:true, wide:true }
+  ];
+
+  const START_COUNT = 3;
+  const counts = {}; // store per-key counts
+
+  let startAudio = null; // keeps track of the Start sound so Wharp can stop it
+
+  const grid = document.getElementById("grid");
+
+  function playSound(path){
+    if(!path) return;
+    const audio = new Audio(path);
+    audio.currentTime = 0;
+    audio.play().catch(()=>{ /* ignore autoplay errors */ });
+  }
+
+  // Play for a bit longer by looping and then stopping after a timeout
+  function playLonger(path, durationMs = 2000){
+    if(!path) return;
+    const audio = new Audio(path);
+    audio.loop = true;
+    audio.play()
+      .then(() => {
+        setTimeout(() => {
+          audio.pause();
+          audio.currentTime = 0;
+        }, durationMs);
+      })
+      .catch(()=>{ /* ignore autoplay errors */ });
+  }
+
+  function stopStartAudio(){
+    if(startAudio){
+      startAudio.pause();
+      startAudio.currentTime = 0;
+      startAudio = null;
+    }
+  }
+
+  function render(){
+    grid.innerHTML = "";
+    keys.forEach(k => {
+      const btn = document.createElement("button");
+      btn.className = "key" + (k.wide ? " wide" : "") + (k.reset ? " reset" : "");
+      if(k.color) btn.style.background = `linear-gradient(145deg, ${k.color}, #ffffff)`;
+
+      // label
+      const labelWrap = document.createElement("div");
+      labelWrap.className = "label";
+      const note = document.createElement("div");
+      note.className = "note";
+      note.textContent = k.label;
+      labelWrap.appendChild(note);
+      btn.appendChild(labelWrap);
+
+      // counter
+      if(k.hasCounter){
+        if(!(k.id in counts)) counts[k.id] = START_COUNT;
+        const badge = document.createElement("div");
+        badge.className = "counter" + (counts[k.id] === 0 ? " zero" : "");
+        badge.textContent = counts[k.id];
+        btn.appendChild(badge);
+      }
+
+      // click behavior
+      btn.addEventListener("click", () => {
+        // Reset button
+        if(k.reset){
+          keys.filter(x => x.hasCounter).forEach(x => counts[x.id] = START_COUNT);
+          render();
+          return;
+        }
+
+        // Start button
+        if(k.isStart){
+          stopStartAudio(); // stop any existing Start sound
+          startAudio = new Audio(k.sound);
+          startAudio.currentTime = 0;
+          startAudio.play().catch(()=>{});
+          if(k.hasCounter){
+            counts[k.id] = Math.max(0, counts[k.id] - 1);
+            render();
+          }
+          return;
+        }
+
+        // Wharp-Wharp button: play wharp AND stop Start
+        if(k.isWharp){
+          stopStartAudio();
+          playSound(k.sound);
+          return;
+        }
+
+        // Regular keys
+        if(k.longNote){
+          playLonger(k.sound); // first 7 keys: longer note
+        } else {
+          playSound(k.sound);
+        }
+
+        if(k.hasCounter){
+          counts[k.id] = Math.max(0, counts[k.id] - 1);
+          render();
+        }
+      });
+
+      grid.appendChild(btn);
+    });
+  }
+
+  render();
+</script>
+</body>
+</html>
