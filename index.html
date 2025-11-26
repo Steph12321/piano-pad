@@ -368,7 +368,6 @@
 
         // Start button (no counter)
         if(k.isStart){
-          stopStartAudio(); // stop any existing Start sound
           startAudio = new Audio(k.sound);
           startAudio.volume = startVolume;
           startAudio.currentTime = 0;
