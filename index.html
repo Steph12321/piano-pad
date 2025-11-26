@@ -368,12 +368,21 @@
 
         // Start button (no counter)
         if(k.isStart){
-          startAudio = new Audio(k.sound);
-          startAudio.volume = startVolume;
-          startAudio.currentTime = 0;
-          startAudio.play().catch(()=>{});
-          return;
-        }
+  stopStartAudio(); // stop any existing Start sound
+  startAudio = new Audio(k.sound);
+  startAudio.volume = startVolume;
+  startAudio.currentTime = 0;
+
+  startAudio.onerror = () => {
+    alert("Could not load: " + k.sound);
+  };
+
+  startAudio.play().catch(err => {
+    alert("Start could not play: " + err);
+  });
+
+  return;
+}
 
         // Wharp-Wharp button: play wharp AND stop Start
         if(k.isWharp){
