@@ -224,9 +224,29 @@
   <div class="header">
     <div>
       <div class="title">Piano Pad</div>
-      <div class="subtitle">Leo's Family Fun</div>
+      <div class="subtitle">Family keys count down from 3 · Start + Wharp + Reset</div>
     </div>
   </div>
+
+  <div class="controls">
+    <div class="control">
+      <label>
+        <span>Family keys volume</span>
+        <span id="mainVolLabel" class="value">100%</span>
+      </label>
+      <input type="range" id="mainVolume" min="0" max="100" value="100">
+    </div>
+    <div class="control">
+      <label>
+        <span>Start volume</span>
+        <span id="startVolLabel" class="value">40%</span>
+      </label>
+      <input type="range" id="startVolume" min="0" max="100" value="40">
+    </div>
+  </div>
+
+  <div id="grid" class="grid"></div>
+</div>
 
 <script>
   // --- CONFIG ---
@@ -241,8 +261,8 @@
     { id:"k6", label:"Scarlett", sound:"sounds/A.mp3",    color:"#ff8fe3", hasCounter:true, longNote:true },
     { id:"k7", label:"Sienna",   sound:"sounds/B.mp3",    color:"#ff9f43", hasCounter:true, longNote:true },
 
-    // 8th key: Start (has counter, plays Start.mp3)
-    { id:"startKey", label:"Start", sound:"sounds/Start.mp3", color:"#9cf6ff", hasCounter:true, longNote:false, isStart:true },
+    // 8th key: Start (NO counter now)
+    { id:"startKey", label:"Start", sound:"sounds/Start.mp3", color:"#9cf6ff", hasCounter:false, longNote:false, isStart:true },
 
     // Wharp-Wharp: plays wharp + stops Start
     { id:"wharp", label:"Wharp-Wharp", sound:"sounds/wharp.mp3", color:"#b8f7ff", hasCounter:false, wide:true, isWharp:true },
@@ -328,7 +348,7 @@
       labelWrap.appendChild(note);
       btn.appendChild(labelWrap);
 
-      // counter
+      // counter (for first 7 only)
       if(k.hasCounter){
         if(!(k.id in counts)) counts[k.id] = START_COUNT;
         const badge = document.createElement("div");
@@ -346,16 +366,13 @@
           return;
         }
 
-        // Start button
+        // Start button (no counter)
         if(k.isStart){
+          stopStartAudio(); // stop any existing Start sound
           startAudio = new Audio(k.sound);
           startAudio.volume = startVolume;
           startAudio.currentTime = 0;
           startAudio.play().catch(()=>{});
-          if(k.hasCounter){
-            counts[k.id] = Math.max(0, counts[k.id] - 1);
-            render();
-          }
           return;
         }
 
@@ -385,25 +402,5 @@
 
   render();
 </script>
-
-<div class="controls">
-    <div class="control">
-      <label>
-        <span>Family keys volume</span>
-        <span id="mainVolLabel" class="value">100%</span>
-      </label>
-      <input type="range" id="mainVolume" min="0" max="100" value="100">
-    </div>
-    <div class="control">
-      <label>
-        <span>Start volume</span>
-        <span id="startVolLabel" class="value">40%</span>
-      </label>
-      <input type="range" id="startVolume" min="0" max="100" value="40">
-    </div>
-  </div>
-  <div id="grid" class="grid"></div>
-</div>
-  
 </body>
 </html>
