@@ -267,6 +267,9 @@
     // Wharp-Wharp: plays wharp + stops Start
     { id:"wharp", label:"Wharp-Wharp", sound:"sounds/wharp.mp3", color:"#b8f7ff", hasCounter:false, wide:true, isWharp:true },
 
+    //Stop: stops the music(duh)
+    { id:"stop", label:"Stop", sound:null, color:"#444", hasCounter:false, wide:true, isStop:true },
+
     // Reset: reset all counters
     { id:"reset", label:"Reset", sound:null, color:null, hasCounter:false, reset:true, wide:true }
   ];
@@ -388,6 +391,12 @@
         if(k.isWharp){
           stopStartAudio();
           playSound(k.sound, mainVolume);
+          return;
+        }
+
+        // Stop button
+        if(k.isStop){
+          stopStartAudio();  // immediately stops the Start music
           return;
         }
 
